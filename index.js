@@ -158,11 +158,11 @@ UniqueName.prototype.keyForName = function (name) {
  */
 UniqueName.prototype.removeName = function (name, tr, callback) {
     if (typeof(tr) === 'function') {
-	callback = tr;
-	tr = null;
+        callback = tr;
+        tr = null;
     }
     var key = this.keyForName(name);
-    (tr||this.fdb).clear(key, callback);
+    (tr || this.fdb).clear(key, callback);
 };
 
 /**
@@ -171,8 +171,12 @@ UniqueName.prototype.removeName = function (name, tr, callback) {
  * for the expiration of this ownership, if any. Also contains "raw" property which is the name before
  * canonicalization.
  */
-UniqueName.prototype.entityForName = function (name, callback) {
-    this.fdb.get(this.keyForName(name), function (error, entity) {
+UniqueName.prototype.entityForName = function (name, tr, callback) {
+    if (typeof(tr) === 'function') {
+        callback = tr;
+        tr = null;
+    }
+    (tr||this.fdb).get(this.keyForName(name), function (error, entity) {
         if (error) {
             return callback(error);
         }
@@ -185,6 +189,44 @@ UniqueName.prototype.entityForName = function (name, callback) {
             }
         }
         callback(null, parsed);
+    });
+};
+
+UniqueName.prototype.changeOwner = function (name, from, to, expiration, callback) {
+    if (typeof(expiration) === 'function') {
+        callback = expiration;
+        expiration = null;
+    }
+    var key = this.keyForName(name);
+
+    var success = false;
+    this.fdb.doTransaction(function (tr, commit) {
+        tr.get(key, function (readErr, readEntity) {
+            if (readErr) {
+                return commit(readErr);
+            }
+            var owner;
+            if (readEntity) {
+                try {
+                    owner = JSON.parse(readEntity);
+                } catch (parseError) {
+                    return commit(parseError);
+                }
+                if (owner.id === from) {
+                    if (expiration) {
+                        owner.end = expiration;
+                    } else {
+                        delete owner.end;
+                    }
+                    owner.id = to;
+                    tr.set(key, JSON.stringify(owner));
+                    success = true;
+                }
+            }
+            commit();
+        });
+    }, function (trError) {
+        callback(trError, success);
     });
 };
 
