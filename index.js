@@ -156,9 +156,13 @@ UniqueName.prototype.keyForName = function (name) {
  * @param name
  * @param callback
  */
-UniqueName.prototype.removeName = function (name, callback) {
+UniqueName.prototype.removeName = function (name, tr, callback) {
+    if (typeof(tr) === 'function') {
+	callback = tr;
+	tr = null;
+    }
     var key = this.keyForName(name);
-    this.fdb.clear(key, callback);
+    (tr||this.fdb).clear(key, callback);
 };
 
 /**
