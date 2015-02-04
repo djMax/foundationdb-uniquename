@@ -192,15 +192,20 @@ UniqueName.prototype.entityForName = function (name, tr, callback) {
     });
 };
 
-UniqueName.prototype.changeOwner = function (name, from, to, expiration, callback) {
+UniqueName.prototype.changeOwner = function (name, from, to, expiration, passedTr, callback) {
     if (typeof(expiration) === 'function') {
         callback = expiration;
         expiration = null;
     }
+    if (typeof(passedTr) === 'function') {
+        callback = passedTr;
+        passedTr = null;
+    }
     var key = this.keyForName(name);
 
     var success = false;
-    this.fdb.doTransaction(function (tr, commit) {
+
+    var ownFunction = function (tr, commit) {
         tr.get(key, function (readErr, readEntity) {
             if (readErr) {
                 return commit(readErr);
@@ -225,9 +230,17 @@ UniqueName.prototype.changeOwner = function (name, from, to, expiration, callbac
             }
             commit();
         });
-    }, function (trError) {
-        callback(trError, success);
-    });
+    }
+
+    if (passedTr) {
+        ownFunction(passedTr, callback);
+    } else {
+        this.fdb.doTransaction(function (autoTr, autoCommit) {
+            ownFunction(autoTr, autoCommit);
+        }, function (trError) {
+            callback(trError, success);
+        });
+    }
 };
 
 module.exports = UniqueName;

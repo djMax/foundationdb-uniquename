@@ -109,4 +109,15 @@ describe('connect-foundationdb', function () {
         }));
     });
 
+    it('should take the name back with a transaction', function takeNameAgain(done) {
+        mydb.doTransaction(function (tr, commit) {
+            fs.changeOwner('djMax', 'user1', 'user2', null, tr, commit);
+        }, done);
+    });
+
+    it('should fail to get the name now that the owner was changed', function getChangedNameAgain(done) {
+        fs.takeName('djMax', 'user1', eat(done, function (success) {
+            assert(!success, 'takeName should not have worked');
+        }));
+    });
 });
