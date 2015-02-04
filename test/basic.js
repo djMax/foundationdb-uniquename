@@ -103,6 +103,12 @@ describe('connect-foundationdb', function () {
        }));
     });
 
+    it('should allow changeOwner even if it is already owned.', function changeNameToExisting(done) {
+        fs.changeOwner('djMax', 'user2', 'user1', eat(done, function (success) {
+            assert(success, 'Change owner should have worked.');
+        }));
+    });
+
     it('should fail to get the name now that the owner was changed', function getChangedName(done) {
         fs.takeName('djMax', 'user2', eat(done, function (success) {
             assert(!success, 'takeName should not have worked');

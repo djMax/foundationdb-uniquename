@@ -226,6 +226,12 @@ UniqueName.prototype.changeOwner = function (name, from, to, expiration, passedT
                     owner.id = to;
                     tr.set(key, JSON.stringify(owner));
                     success = true;
+                } else if (owner.id === to) {
+                    if (expiration && owner.end !== expiration) {
+                        owner.end = expiration;
+                        tr.set(key, JSON.stringify(owner));
+                    }
+                    success = true;
                 }
             }
             commit();
