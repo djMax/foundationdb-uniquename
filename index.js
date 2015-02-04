@@ -176,7 +176,7 @@ UniqueName.prototype.entityForName = function (name, tr, callback) {
         callback = tr;
         tr = null;
     }
-    (tr||this.fdb).get(this.keyForName(name), function (error, entity) {
+    (tr || this.fdb).get(this.keyForName(name), function (error, entity) {
         if (error) {
             return callback(error);
         }
@@ -236,16 +236,16 @@ UniqueName.prototype.changeOwner = function (name, from, to, expiration, passedT
             }
             commit();
         });
-    }
+    }, invokeCallback = function (err) {
+        callback(err, success);
+    };
 
     if (passedTr) {
-        ownFunction(passedTr, callback);
+        ownFunction(passedTr, invokeCallback);
     } else {
         this.fdb.doTransaction(function (autoTr, autoCommit) {
             ownFunction(autoTr, autoCommit);
-        }, function (trError) {
-            callback(trError, success);
-        });
+        }, invokeCallback);
     }
 };
 

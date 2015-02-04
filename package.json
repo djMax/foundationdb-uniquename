@@ -1,6 +1,6 @@
 {
   "name": "foundationdb-uniquename",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A simple module to store and manage a list of unique names associated with entities (such as usernames on a web site)",
   "main": "index.js",
   "scripts": {
